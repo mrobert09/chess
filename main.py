@@ -1,5 +1,6 @@
 from data import *
 
+
 class Game:
     """
     Instance of PyGame.
@@ -57,8 +58,8 @@ class Game:
                 piece = self.data.get_selected_piece()
                 if piece:
                     piece.set_previous_location()
-                    # piece.emulate_move_bank()
 
+            # Most game logic happens under this piece. Game state updates upon dropping piece on location.
             if event.type == pg.MOUSEBUTTONUP:
                 piece = self.data.get_selected_piece()
                 if piece:
@@ -66,8 +67,8 @@ class Game:
                     if piece.move_validation(nearest_cell):
                         self.data.scan_board()
                         self.data.update_move_banks()
-                        self.data.evaluate_check(self.data._black_king)
-                        self.data.evaluate_check(self.data._white_king)
+                        self.data.evaluate_check(self.data.black_king())
+                        self.data.evaluate_check(self.data.white_king())
                 self.data.clear_selected_piece()
                 self.data.clear_highlights()
                 self.data.clear_team_move_banks()
@@ -82,7 +83,7 @@ class Game:
 
             # Functionality to drag and drop chess pieces
             click = pg.mouse.get_pressed(3)
-            if click[0] == True:
+            if click[0]:
                 piece = self.data.get_selected_piece()
                 if piece:  # prevents None from causing error
                     pg.mouse.set_visible(False)
@@ -90,7 +91,7 @@ class Game:
                     piece.set_location(pg.mouse.get_pos())
                     self.data.set_highlights(piece.get_verified_move_bank())
 
-            elif click[0] == False:
+            elif not click[0]:
                 pg.mouse.set_visible(True)
 
             # check for closing window
@@ -122,7 +123,7 @@ class Game:
 
     def draw_grid(self):
         """
-        Draws Chess board. X_OFFSET and Y_OFFSET can be adjusted in settings.py to adjust where the board appears on screen.
+        Draws Chess board. X_OFFSET and Y_OFFSET can be adjusted in settings.py to adjust where the board appears.
         Lines drawn after tiles for better visuals.
         :return:
         """
@@ -144,16 +145,17 @@ class Game:
         :return:
         """
         for cell in self.data.get_highlights():
+            screen = self.screen
             g_pos = self.data.global_pos(cell)
             offset = TILESIZE / 2
             x, y = g_pos
             x -= offset
             y -= offset
             g_pos = (x, y)
-            pg.draw.line(self.screen, YELLOW, g_pos, (g_pos[0] + TILESIZE, g_pos[1]), 3)
-            pg.draw.line(self.screen, YELLOW, g_pos, (g_pos[0], g_pos[1] + TILESIZE), 3)
-            pg.draw.line(self.screen, YELLOW, (g_pos[0], g_pos[1] + TILESIZE), (g_pos[0] + TILESIZE, g_pos[1] + TILESIZE), 3)
-            pg.draw.line(self.screen, YELLOW, (g_pos[0] + TILESIZE, g_pos[1]), (g_pos[0] + TILESIZE, g_pos[1] + TILESIZE), 3)
+            pg.draw.line(screen, YELLOW, g_pos, (g_pos[0] + TILESIZE, g_pos[1]), 3)
+            pg.draw.line(screen, YELLOW, g_pos, (g_pos[0], g_pos[1] + TILESIZE), 3)
+            pg.draw.line(screen, YELLOW, (g_pos[0], g_pos[1] + TILESIZE), (g_pos[0] + TILESIZE, g_pos[1] + TILESIZE), 3)
+            pg.draw.line(screen, YELLOW, (g_pos[0] + TILESIZE, g_pos[1]), (g_pos[0] + TILESIZE, g_pos[1] + TILESIZE), 3)
 
     def draw_text(self):
         """
@@ -189,6 +191,7 @@ class Game:
         """
         pass
 
+
 def main():
     g = Game()
     g.show_start_screen()
@@ -196,6 +199,7 @@ def main():
         g.new()
         g.show_go_screen()
     pg.quit()
+
 
 if __name__ == '__main__':
     test_var = 3

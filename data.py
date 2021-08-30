@@ -1,5 +1,6 @@
 from pieces import *
 
+
 class GameData:
     """
     Main data class for game.
@@ -74,6 +75,10 @@ class GameData:
         self._selected_piece = piece
 
     def get_occupied(self):
+        """
+        Returns known occupied cells.
+        :return:
+        """
         return self._occupied_cells
 
     def add_occupied(self, cell):
@@ -183,7 +188,7 @@ class GameData:
         rooks = [('Black', (0, 0)), ('Black', (7, 0)), ('White', (0, 7)), ('White', (7, 7))]
         knights = [('Black', (1, 0)), ('Black', (6, 0)), ('White', (1, 7)), ('White', (6, 7))]
         bishops = [('Black', (2, 0)), ('Black', (5, 0)), ('White', (2, 7)), ('White', (5, 7))]
-        kings =  [('Black', (4, 0)), ('White', (4, 7))]
+        kings = [('Black', (4, 0)), ('White', (4, 7))]
         queens = [('Black', (3, 0)), ('White', (3, 7))]
 
         for element in rooks:
@@ -213,7 +218,8 @@ class GameData:
             self._game.all_sprites.add(b_piece)
             self._game.all_sprites.add(w_piece)
 
-    def cell_pos(self, pos):
+    @staticmethod
+    def cell_pos(pos):
         """
         Takes a given pixel coordinate on the screen and returns the cell position on the board.
         :param pos: tuple
@@ -226,9 +232,10 @@ class GameData:
             return None
         else:
             x, y = int(x), int(y)
-            return (x, y)
+            return x, y
 
-    def global_pos(self, cell):
+    @staticmethod
+    def global_pos(cell):
         """
         Opposite of cell_pos method, converts a cell grid position to it's center pixel.
         :param cell: tuple
@@ -238,7 +245,7 @@ class GameData:
             x, y = cell
             x = x * TILESIZE + X_OFFSET + TILESIZE/2
             y = y * TILESIZE + Y_OFFSET + TILESIZE/2
-            return (x, y)
+            return x, y
 
     def select_piece(self):
         """
@@ -287,7 +294,7 @@ class GameData:
             global_coord = self.global_pos(cell)
             if global_coord:
                 x, y = global_coord
-                return (x + TILESIZE/2, y + TILESIZE/2)
+                return x + TILESIZE / 2, y + TILESIZE / 2
             else:
                 return piece.get_previous_location()
 
@@ -303,10 +310,6 @@ class GameData:
                 sprite.clear_move_bank()
                 if sprite.get_cell_location() is not None:
                     sprite.update_move_bank()
-        # if not self.black_king().get_has_moved():
-        #     self.black_king().castle_check(4, 0)
-        # if not self.white_king().get_has_moved():
-        #     self.white_king().castle_check(4, 7)
 
     def clear_team_move_banks(self):
         """
@@ -325,7 +328,7 @@ class GameData:
         """
         if piece:
             if passant:
-                if piece._color != self._passant_pawn._color:
+                if piece.get_color() != self._passant_pawn.get_color():
                     self._passant_pawn.kill()
             for sprite in self._game.all_sprites:
                 if sprite is not piece:
@@ -341,14 +344,11 @@ class GameData:
         :param king: king piece being evaluated
         :return: True if a check is in effect
         """
-        king.set_check_flag(False)
         if king.get_color() == 'Black':
             if king.get_cell_location() in self.get_white_bank():
-                king.set_check_flag(True)
                 return True
         elif king.get_color() == 'White':
             if king.get_cell_location() in self.get_black_bank():
-                king.set_check_flag(True)
                 return True
         return False
 

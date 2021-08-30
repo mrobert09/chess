@@ -7,6 +7,12 @@ class Piece(pg.sprite.Sprite):
     """
 
     def __init__(self, color, location, data):
+        """
+        Initialization of piece data. Some redundant info is recorded. Hope to clean up at some point.
+        :param color: 'White' / 'Black'
+        :param location: original cell location of piece
+        :param data: window to the data class that object was created in
+        """
         pg.sprite.Sprite.__init__(self)
         self._data = data
         self._color = color  # black or white
@@ -30,19 +36,41 @@ class Piece(pg.sprite.Sprite):
         self._debug = 0
 
     def set_location(self, loc):
+        """
+        Sets current pixel location.
+        :param loc:
+        :return:
+        """
         self._location = loc
 
     def set_previous_location(self):
+        """
+        Sets previous pixel / cell location of a piece. Used right before temporarily changing the piece's location
+        for evaluation purposes.
+        :return:
+        """
         self._previous_location = self._location
         self._previous_cell = self._cell_location
 
     def get_location(self):
+        """
+        Returns current location of piece. This is often a temporary value as a piece gets evaluated.
+        :return:
+        """
         return self._location
 
     def get_previous_location(self):
+        """
+        Returns previous pixel location of piece.
+        :return:
+        """
         return self._previous_location
 
     def get_cell_location(self):
+        """
+        Returns current location of piece. Note: This may be a temporary location for evaluations.
+        :return:
+        """
         return self._cell_location
 
     def get_has_moved(self):
@@ -60,9 +88,17 @@ class Piece(pg.sprite.Sprite):
         self._cell_location = cell
 
     def get_previous_cell(self):
+        """
+        Returns last cell position of piece.
+        :return:
+        """
         return self._previous_cell
 
     def get_color(self):
+        """
+        Returns color of piece.
+        :return:
+        """
         return self._color
 
     def get_move_bank(self):
@@ -87,6 +123,10 @@ class Piece(pg.sprite.Sprite):
         self._move_bank.clear()
 
     def check_passant(self):
+        """
+        Checks status of passant and updates variable.
+        :return:
+        """
         if self._previous_cell == self._starting_cell:
             if self._previous_cell[0] == self._cell_location[0]:
                 if self.get_color() == 'White':
@@ -138,6 +178,7 @@ class Piece(pg.sprite.Sprite):
         """
         Adds cell to piece's move bank, and also adds to team attacking bank.
         :param cell: tuple
+        :param verified: If True, also add to the verified move bank.
         :return:
         """
         self._move_bank.append(cell)
@@ -150,6 +191,11 @@ class Piece(pg.sprite.Sprite):
             self._verified_move_bank.append(cell)
 
     def add_attacking_bank(self, cell):
+        """
+        Adds cell to bank of cells currently under attack by a team.
+        :param cell: tuple
+        :return:
+        """
         if self.get_color() == 'Black':
             if cell not in self._data.get_black_bank():
                 self._data.add_black_bank(cell)
@@ -234,7 +280,6 @@ class King(Piece):
         self.update_move_bank_helper(x - 1, y)
         self.update_move_bank_helper(x, y + 1)
         self.update_move_bank_helper(x, y - 1)
-        # self.castle_check(x, y)
 
     def update_move_bank_helper(self, x, y):
         """
@@ -270,14 +315,17 @@ class King(Piece):
                 # Check left castle
                 if (x - 1, y) not in self._data.get_occupied() and (x - 1, y) not in self._data.get_white_bank():
                     if (x - 2, y) not in self._data.get_occupied() and (x - 2, y) not in self._data.get_white_bank():
-                        if (x - 3, y) not in self._data.get_occupied() and (x - 3, y) not in self._data.get_white_bank():
-                            if left_rook and not left_rook.get_has_moved() and (x - 4, y) not in self._data.get_white_bank():
+                        if (x - 3, y) not in self._data.get_occupied() \
+                                and (x - 3, y) not in self._data.get_white_bank():
+                            if left_rook and not left_rook.get_has_moved() \
+                                    and (x - 4, y) not in self._data.get_white_bank():
                                 self.add_to_move_bank((x - 2, y), True)
 
                 # Check right castle
                 if (x + 1, y) not in self._data.get_occupied() and (x + 1, y) not in self._data.get_white_bank():
                     if (x + 2, y) not in self._data.get_occupied() and (x + 2, y) not in self._data.get_white_bank():
-                        if right_rook and not right_rook.get_has_moved() and (x + 3, y) not in self._data.get_white_bank():
+                        if right_rook and not right_rook.get_has_moved() \
+                                and (x + 3, y) not in self._data.get_white_bank():
                             self.add_to_move_bank((x + 2, y), True)
 
         elif self.get_color() == 'White':
@@ -285,14 +333,17 @@ class King(Piece):
                 # Check left castle
                 if (x - 1, y) not in self._data.get_occupied() and (x - 1, y) not in self._data.get_black_bank():
                     if (x - 2, y) not in self._data.get_occupied() and (x - 2, y) not in self._data.get_black_bank():
-                        if (x - 3, y) not in self._data.get_occupied() and (x - 3, y) not in self._data.get_black_bank():
-                            if left_rook and not left_rook.get_has_moved() and (x - 4, y) not in self._data.get_black_bank():
+                        if (x - 3, y) not in self._data.get_occupied() \
+                                and (x - 3, y) not in self._data.get_black_bank():
+                            if left_rook and not left_rook.get_has_moved() \
+                                    and (x - 4, y) not in self._data.get_black_bank():
                                 self.add_to_move_bank((x - 2, y), True)
 
                 # Check right castle
                 if (x + 1, y) not in self._data.get_occupied() and (x + 1, y) not in self._data.get_black_bank():
                     if (x + 2, y) not in self._data.get_occupied() and (x + 2, y) not in self._data.get_black_bank():
-                        if right_rook and not right_rook.get_has_moved() and (x + 3, y) not in self._data.get_black_bank():
+                        if right_rook and not right_rook.get_has_moved() \
+                                and (x + 3, y) not in self._data.get_black_bank():
                             self.add_to_move_bank((x + 2, y), True)
 
     def set_check_flag(self, flag):
