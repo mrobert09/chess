@@ -122,6 +122,13 @@ class Piece(pg.sprite.Sprite):
         """
         self._move_bank.clear()
 
+    def clear_verified_move_bank(self):
+        """
+        Clears verified move bank for piece.
+        :return:
+        """
+        self._verified_move_bank.clear()
+
     def check_passant(self):
         """
         Checks status of passant and updates variable.

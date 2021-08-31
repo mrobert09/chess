@@ -16,6 +16,8 @@ class Game:
         pg.display.set_caption(TITLE)
         self.font = pg.font.Font(FONT_NAME, FONT_SIZE)
         self.clock = pg.time.Clock()
+        self.b1 = None
+        self.b2 = None
         self.running = True
 
     def new(self):
@@ -57,7 +59,13 @@ class Game:
                 self.data.select_piece()
                 piece = self.data.get_selected_piece()
                 if piece:
-                    piece.set_previous_location()
+                    if self.data._turn_order is True:
+                        if piece.get_color() == self.data._turn:
+                            piece.set_previous_location()
+                        else:
+                            piece.clear_verified_move_bank()
+                    elif self.data._turn_order is False:
+                        piece.set_previous_location()
 
             # Most game logic happens under this piece. Game state updates upon dropping piece on location.
             if event.type == pg.MOUSEBUTTONUP:
@@ -67,6 +75,7 @@ class Game:
                     if piece.move_validation(nearest_cell):
                         self.data.scan_board()
                         self.data.update_move_banks()
+                        self.data.change_turn()
                 if self.data.evaluate_check(self.data.black_king()):
                     self.data.black_king().set_check_flag(True)
                 else:
@@ -122,6 +131,7 @@ class Game:
         self.screen.fill(WHITE)
         self.draw_grid()
         self.draw_highlights()
+        self.draw_turn_buttons()
         self.all_sprites.draw(self.screen)
         self.draw_text()
 
@@ -164,6 +174,22 @@ class Game:
             pg.draw.line(screen, YELLOW, (g_pos[0], g_pos[1] + TILESIZE), (g_pos[0] + TILESIZE, g_pos[1] + TILESIZE), 3)
             pg.draw.line(screen, YELLOW, (g_pos[0] + TILESIZE, g_pos[1]), (g_pos[0] + TILESIZE, g_pos[1] + TILESIZE), 3)
 
+    def draw_turn_buttons(self):
+        """
+        Draws buttons to interact with on the UI.
+        :return:
+        """
+        global b1
+        global b2
+        x = X_OFFSET
+        y = BOARDHEIGHT + Y_OFFSET + TILESIZE / 2
+        x2 = x + 3*TILESIZE
+        self.b1 = pg.Rect(x, y, 2 * TILESIZE + TILESIZE/2, TILESIZE)
+        self.b2 = pg.Rect(x2, y, 2 * TILESIZE + TILESIZE/2, TILESIZE)
+        pg.draw.rect(self.screen, BLACK, self.b1, 2)
+        pg.draw.rect(self.screen, BLACK, self.b2, 2)
+
+
     def draw_text(self):
         """
         Used for debugging at the moment.
@@ -183,6 +209,16 @@ class Game:
         text_rect = text.get_rect()
         text_rect.topleft = (600, 100)
         self.screen.blit(text, text_rect)
+
+        b1_text = self.font.render('Turn Order On', True, BLACK)
+        b2_text = self.font.render('Turn Order Off', True, BLACK)
+        b1_text_rect = b1_text.get_rect()
+        b2_text_rect = b2_text.get_rect()
+        b1_text_rect.center = self.b1.center
+        b2_text_rect.center = self.b2.center
+        # b1_text.
+        self.screen.blit(b1_text, b1_text_rect)
+        self.screen.blit(b2_text, b2_text_rect)
 
     def show_start_screen(self):
         """

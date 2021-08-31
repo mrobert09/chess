@@ -19,6 +19,8 @@ class GameData:
         self._passant_pawn = None
         self._black_king = None  # special pointers to black and white kings
         self._white_king = None
+        self._turn_order = True
+        self._turn = 'White'
         self._winner = None
         self._game = game
 
@@ -118,6 +120,23 @@ class GameData:
         :return:
         """
         self._highlighted_cells = []
+
+    def get_turn(self):
+        """
+        Returns which player's turn it is.
+        :return:
+        """
+        return self._turn
+
+    def change_turn(self):
+        """
+        Changes turn upon completion of move.
+        :return:
+        """
+        if self._turn == 'White':
+            self._turn = 'Black'
+        elif self._turn == 'Black':
+            self._turn = 'White'
 
     def set_passant(self, cell, piece):
         """
@@ -271,7 +290,12 @@ class GameData:
         if clicked_sprites:
             return clicked_sprites[0]
         else:
-            return None
+            if self._game.b1.collidepoint(pos):
+                self._turn_order = True
+            elif self._game.b2.collidepoint(pos):
+                self._turn_order = False
+            else:
+                return None
 
     def get_piece_from_coord(self, coord):
         """
