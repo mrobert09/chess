@@ -189,7 +189,6 @@ class Game:
         pg.draw.rect(self.screen, BLACK, self.b1, 2)
         pg.draw.rect(self.screen, BLACK, self.b2, 2)
 
-
     def draw_text(self):
         """
         Used for debugging at the moment.
