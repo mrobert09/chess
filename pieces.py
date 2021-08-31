@@ -215,6 +215,13 @@ class Piece(pg.sprite.Sprite):
             self.set_cell_location(move)
             self._data.scan_board()
             self._data.update_move_banks(self)  # excludes self from updates
+
+            # early scan and recheck to fix error related to kings capturing protected pieces
+            if self == self._data.black_king() or self == self._data.white_king():
+                self.set_cell_location(original_position)
+                self._data.scan_board()
+                self._data.update_move_banks(self)
+
             if self.get_color() == 'Black':
                 if not self._data.evaluate_check(self._data.black_king()):
                     new_move_bank.append(move)

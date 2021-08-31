@@ -67,8 +67,15 @@ class Game:
                     if piece.move_validation(nearest_cell):
                         self.data.scan_board()
                         self.data.update_move_banks()
-                        self.data.evaluate_check(self.data.black_king())
-                        self.data.evaluate_check(self.data.white_king())
+                if self.data.evaluate_check(self.data.black_king()):
+                    self.data.black_king().set_check_flag(True)
+                else:
+                    self.data.black_king().set_check_flag(False)
+                if self.data.evaluate_check(self.data.white_king()):
+                    self.data.white_king().set_check_flag(True)
+                else:
+                    self.data.white_king().set_check_flag(False)
+
                 self.data.clear_selected_piece()
                 self.data.clear_highlights()
                 self.data.clear_team_move_banks()
