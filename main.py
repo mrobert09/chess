@@ -55,7 +55,7 @@ class Game:
         for event in pg.event.get():
             # check for clicking of mouse
 
-            if event.type == pg.MOUSEBUTTONDOWN:
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 self.data.select_piece()
                 piece = self.data.get_selected_piece()
                 if piece:
@@ -68,7 +68,7 @@ class Game:
                         piece.set_previous_location()
 
             # Most game logic happens under this piece. Game state updates upon dropping piece on location.
-            if event.type == pg.MOUSEBUTTONUP:
+            if event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 piece = self.data.get_selected_piece()
                 if piece:
                     nearest_cell = self.data.cell_pos(piece.get_location())
