@@ -77,13 +77,13 @@ class Game:
                         self.data.update_move_banks()
                         self.data.change_turn()
                 if self.data.evaluate_check(self.data.black_king):
-                    self.data.black_king.set_check_flag(True)
+                    self.data.black_king.check_flag = True
                 else:
-                    self.data.black_king.set_check_flag(False)
+                    self.data.black_king.check_flag = False
                 if self.data.evaluate_check(self.data.white_king):
-                    self.data.white_king.set_check_flag(True)
+                    self.data.white_king.check_flag = True
                 else:
-                    self.data.white_king.set_check_flag(False)
+                    self.data.white_king.check_flag = False
 
                 self.data.clear_selected_piece()
                 self.data.highlighted_cells.clear()

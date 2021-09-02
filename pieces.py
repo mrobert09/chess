@@ -356,7 +356,7 @@ class King(Piece):
         self.image = pg.transform.scale(self.image, (TILESIZE, TILESIZE))
         self.rect = self.image.get_rect()
         self.rect.center = self.pixel_location
-        self._in_check = False
+        self.in_check = False
 
     def update_move_bank(self):
         """
@@ -445,20 +445,22 @@ class King(Piece):
                                 and (x + 3, y) not in self.data.black_attacking:
                             self.add_to_move_bank((x + 2, y), True)
 
-    def set_check_flag(self, flag):
+    @property
+    def in_check(self):
+        """
+        Returns current state of check.
+        :return:
+        """
+        return self._in_check
+
+    @in_check.setter
+    def in_check(self, flag):
         """
         Sets whether king is currently in check or not.
         :param flag: True/False
         :return:
         """
         self._in_check = flag
-
-    def get_check_flag(self):
-        """
-        Returns current state of check.
-        :return:
-        """
-        return self._in_check
 
 
 class Queen(Piece):
