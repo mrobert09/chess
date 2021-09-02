@@ -32,7 +32,7 @@ class Game:
         self.data.update_move_banks()
         for sprite in self.all_sprites:
             sprite.set_previous_location()
-            sprite.emulate_move_bank()
+            sprite.simulate_move_bank()
         self.run()
 
     def run(self):
@@ -57,55 +57,55 @@ class Game:
 
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 self.data.select_piece()
-                piece = self.data.get_selected_piece()
+                piece = self.data.selected_piece
                 if piece:
-                    if self.data._turn_order is True:
-                        if piece.get_color() == self.data._turn:
+                    if self.data.turn_order is True:
+                        if piece.color == self.data.turn:
                             piece.set_previous_location()
                         else:
-                            piece.clear_verified_move_bank()
-                    elif self.data._turn_order is False:
+                            piece.verified_move_bank.clear()
+                    elif self.data.turn_order is False:
                         piece.set_previous_location()
 
             # Most game logic happens under this piece. Game state updates upon dropping piece on location.
             if event.type == pg.MOUSEBUTTONUP and event.button == 1:
-                piece = self.data.get_selected_piece()
+                piece = self.data.selected_piece
                 if piece:
-                    nearest_cell = self.data.cell_pos(piece.get_location())
+                    nearest_cell = self.data.cell_pos(piece.pixel_location)
                     if piece.move_validation(nearest_cell):
                         self.data.scan_board()
                         self.data.update_move_banks()
                         self.data.change_turn()
-                if self.data.evaluate_check(self.data.black_king()):
-                    self.data.black_king().set_check_flag(True)
+                if self.data.evaluate_check(self.data.black_king):
+                    self.data.black_king.set_check_flag(True)
                 else:
-                    self.data.black_king().set_check_flag(False)
-                if self.data.evaluate_check(self.data.white_king()):
-                    self.data.white_king().set_check_flag(True)
+                    self.data.black_king.set_check_flag(False)
+                if self.data.evaluate_check(self.data.white_king):
+                    self.data.white_king.set_check_flag(True)
                 else:
-                    self.data.white_king().set_check_flag(False)
+                    self.data.white_king.set_check_flag(False)
 
                 self.data.clear_selected_piece()
-                self.data.clear_highlights()
+                self.data.highlighted_cells.clear()
                 self.data.clear_team_move_banks()
                 for sprite in self.all_sprites:
                     sprite.set_previous_location()
-                    sprite.emulate_move_bank()
-                if not self.data.black_king().get_has_moved():
-                    self.data.black_king().castle_check(4, 0)
-                if not self.data.white_king().get_has_moved():
-                    self.data.white_king().castle_check(4, 7)
+                    sprite.simulate_move_bank()
+                if not self.data.black_king.has_moved:
+                    self.data.black_king.castle_check(4, 0)
+                if not self.data.white_king.has_moved:
+                    self.data.white_king.castle_check(4, 7)
                 self.data.mate_check()
 
             # Functionality to drag and drop chess pieces
             click = pg.mouse.get_pressed(3)
             if click[0]:
-                piece = self.data.get_selected_piece()
+                piece = self.data.selected_piece
                 if piece:  # prevents None from causing error
                     pg.mouse.set_visible(False)
                     self.all_sprites.move_to_front(piece)
-                    piece.set_location(pg.mouse.get_pos())
-                    self.data.set_highlights(piece.get_verified_move_bank())
+                    piece.pixel_location = pg.mouse.get_pos()
+                    self.data.highlighted_cells = piece.verified_move_bank.copy()
 
             elif not click[0]:
                 pg.mouse.set_visible(True)
@@ -129,14 +129,28 @@ class Game:
         :return:
         """
         self.screen.fill(WHITE)
-        self.draw_grid()
-        self.draw_highlights()
-        self.draw_turn_buttons()
-        self.all_sprites.draw(self.screen)
-        self.draw_text()
+        self.draw_board()
+        self.draw_ui()
 
         # always do last after drawing everything
         pg.display.flip()
+
+    def draw_board(self):
+        """
+        Holds all the board related draws.
+        :return:
+        """
+        self.draw_grid()
+        self.draw_highlights()
+        self.all_sprites.draw(self.screen)
+
+    def draw_ui(self):
+        """
+        Holds all the UI related draws.
+        :return:
+        """
+        self.draw_turn_buttons()
+        self.draw_text()
 
     def draw_grid(self):
         """
@@ -161,7 +175,7 @@ class Game:
         Draws a highlight around the currently selected cell.
         :return:
         """
-        for cell in self.data.get_highlights():
+        for cell in self.data.highlighted_cells:
             screen = self.screen
             g_pos = self.data.global_pos(cell)
             offset = TILESIZE / 2
@@ -179,8 +193,6 @@ class Game:
         Draws buttons to interact with on the UI.
         :return:
         """
-        global b1
-        global b2
         x = X_OFFSET
         y = BOARDHEIGHT + Y_OFFSET + TILESIZE / 2
         x2 = x + 3*TILESIZE
@@ -203,8 +215,8 @@ class Game:
         #     else:
         #         x = 'Safe'
         #     text = self.font.render(x, True, BLACK)
-        text = self.font.render(str(self.data._winner), True, BLACK)
-        # text = self.font.render(str(self.data.get_piece_from_coord((1, 0))._verified_move_bank), True, BLACK)
+        text = self.font.render(str(self.data.winner), True, BLACK)
+        # text = self.font.render(str(self.data.get_piece_from_coord((1, 0)).verified_move_bank), True, BLACK)
         text_rect = text.get_rect()
         text_rect.topleft = (600, 100)
         self.screen.blit(text, text_rect)
@@ -215,7 +227,6 @@ class Game:
         b2_text_rect = b2_text.get_rect()
         b1_text_rect.center = self.b1.center
         b2_text_rect.center = self.b2.center
-        # b1_text.
         self.screen.blit(b1_text, b1_text_rect)
         self.screen.blit(b2_text, b2_text_rect)
 
@@ -244,5 +255,4 @@ def main():
 
 
 if __name__ == '__main__':
-    test_var = 3
     main()
