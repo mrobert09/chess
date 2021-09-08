@@ -9,7 +9,7 @@ img_folder = './imgs'
 
 # game options/settings
 TITLE = "Chess"
-WIDTH = 800
+WIDTH = 900
 HEIGHT = 700
 FPS = 60
 FONT_NAME = pg.font.match_font('arial')

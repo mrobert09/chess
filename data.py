@@ -242,36 +242,39 @@ class GameData:
         """
 
         # Back row starting positions
-        rooks = [('Black', (0, 0)), ('Black', (7, 0)), ('White', (0, 7)), ('White', (7, 7))]
-        knights = [('Black', (1, 0)), ('Black', (6, 0)), ('White', (1, 7)), ('White', (6, 7))]
-        bishops = [('Black', (2, 0)), ('Black', (5, 0)), ('White', (2, 7)), ('White', (5, 7))]
-        kings = [('Black', (4, 0)), ('White', (4, 7))]
-        queens = [('Black', (3, 0)), ('White', (3, 7))]
+        rooks = [('Black', (0, 0), 'br.svg'), ('Black', (7, 0), 'br.svg'),
+                 ('White', (0, 7), 'wr.svg'), ('White', (7, 7), 'wr.svg')]
+        knights = [('Black', (1, 0), 'bn.svg'), ('Black', (6, 0), 'bn.svg'),
+                   ('White', (1, 7), 'wn.svg'), ('White', (6, 7), 'wn.svg')]
+        bishops = [('Black', (2, 0), 'bb.svg'), ('Black', (5, 0), 'bb.svg'),
+                   ('White', (2, 7), 'wb.svg'), ('White', (5, 7), 'wb.svg')]
+        kings = [('Black', (4, 0), 'bk.svg'), ('White', (4, 7), 'wk.svg')]
+        queens = [('Black', (3, 0), 'bq.svg'), ('White', (3, 7), 'wq.svg')]
 
         for element in rooks:
-            piece = Rook(element[0], element[1], 'Rook', self)
+            piece = Rook(element[0], element[1], 'Rook', element[2], self)
             self.game.all_sprites.add(piece)
 
         for element in knights:
-            piece = Knight(element[0], element[1], 'Knight', self)
+            piece = Knight(element[0], element[1], 'Knight', element[2], self)
             self.game.all_sprites.add(piece)
 
         for element in bishops:
-            piece = Bishop(element[0], element[1], 'Bishop', self)
+            piece = Bishop(element[0], element[1], 'Bishop', element[2], self)
             self.game.all_sprites.add(piece)
 
         for element in kings:
-            piece = King(element[0], element[1], 'King', self)
+            piece = King(element[0], element[1], 'King', element[2], self)
             self.game.all_sprites.add(piece)
 
         for element in queens:
-            piece = Queen(element[0], element[1], 'Queen', self)
+            piece = Queen(element[0], element[1], 'Queen', element[2], self)
             self.game.all_sprites.add(piece)
 
         # Pawn starting positions
         for x in range(0, 8):
-            b_piece = Pawn('Black', (x, 1), 'Pawn', self)
-            w_piece = Pawn('White', (x, 6), 'Pawn', self)
+            b_piece = Pawn('Black', (x, 1), 'Pawn', 'bp.svg', self)
+            w_piece = Pawn('White', (x, 6), 'Pawn', 'wp.svg', self)
             self.game.all_sprites.add(b_piece)
             self.game.all_sprites.add(w_piece)
 
@@ -439,17 +442,31 @@ class GameData:
         :param passant: if to allow passant kills
         :return:
         """
+        captured_piece = None
+        black_captures = self.game.ui[2]
+        white_captures = self.game.ui[3]
         if piece:
             if passant:
                 if piece.color != self.passant_pawn.color:
-                    self.passant_pawn.kill()
+                    captured_piece = self.passant_pawn
             for sprite in self.game.all_sprites:
                 if sprite is not piece:
                     if sprite.pixel_location == piece.pixel_location:
                         if sprite.color != piece.color:
-                            sprite.kill()
-                        else:
-                            piece.pixel_location = piece.previous_pixel
+                            captured_piece = sprite
+            if captured_piece:
+                if captured_piece.color != piece.color:
+                    captured_piece.kill()
+                    self.game.captured_sprites.add(captured_piece)
+                    captured_piece.change_transform(int(TILESIZE / 2))
+                    if captured_piece.color == 'Black':
+                        print('Black', captured_piece.piece_type, 'captured!')
+                        captured_piece.pixel_location = white_captures.next_box_position
+                        white_captures.set_next_box_position()
+                    elif captured_piece.color == 'White':
+                        print('White', captured_piece.piece_type, 'captured!')
+                        captured_piece.pixel_location = black_captures.next_box_position
+                        black_captures.set_next_box_position()
 
     def evaluate_check(self, king):
         """

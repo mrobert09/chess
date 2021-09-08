@@ -26,6 +26,7 @@ class Game:
         """
         self.data = GameData(self)
         self.all_sprites = pg.sprite.LayeredUpdates()
+        self.captured_sprites = pg.sprite.LayeredUpdates()
         self.ui = [] # list of all UI elements (like rects)
         self.create_ui()
         self.data.populate_board()
@@ -78,7 +79,7 @@ class Game:
 
             # Most game logic happens under this piece. Game state updates upon dropping piece on location.
             if event.type == pg.MOUSEBUTTONUP and event.button == 1:
-                piece = self.data.get_piece()
+                piece = self.data.selected_piece
                 if piece:
                     self.data.selected_piece = piece
                     nearest_cell = self.data.cell_pos(piece.pixel_location)
@@ -132,6 +133,7 @@ class Game:
         :return:
         """
         self.all_sprites.update()
+        self.captured_sprites.update()
 
     def draw(self):
         """
@@ -166,6 +168,7 @@ class Game:
         :return:
         """
         self.create_turn_buttons()
+        self.create_captured_boxes()
 
     def create_turn_buttons(self):
         """
@@ -173,9 +176,9 @@ class Game:
         :return:
         """
         x = X_OFFSET
-        y = BOARDHEIGHT + Y_OFFSET + TILESIZE / 2
+        y = BOARDHEIGHT + Y_OFFSET + TILESIZE/2
         x2 = x + 3 * TILESIZE
-        length = 2 * TILESIZE + TILESIZE / 2
+        length = 2 * TILESIZE + TILESIZE/2
         width = TILESIZE
 
         order_on = TextBox('Turn Order On', (x, y), (length, width), self)
@@ -183,6 +186,24 @@ class Game:
 
         order_off = TextBox('Turn Order Off', (x2, y), (length, width), self)
         self.ui.append(order_off)
+
+    def create_captured_boxes(self):
+        """
+        Creates boxes to display captured pieces.
+        :return:
+        """
+
+        x = BOARDWIDTH + X_OFFSET + TILESIZE
+        y = Y_OFFSET
+        y2 = BOARDHEIGHT + Y_OFFSET - TILESIZE*2
+        length = TILESIZE*3 - TILESIZE/2
+        width = TILESIZE * 2
+
+        black_captures = CapturedBox((x, y), (length, width), 'White', self)
+        self.ui.append(black_captures)
+
+        white_captures = CapturedBox((x, y2), (length, width), 'Black', self)
+        self.ui.append(white_captures)
 
     def draw_board(self):
         """
@@ -192,6 +213,7 @@ class Game:
         self.draw_grid()
         self.draw_highlights()
         self.all_sprites.draw(self.screen)
+        self.captured_sprites.draw(self.screen)
 
     def draw_ui(self):
         """
@@ -236,7 +258,6 @@ class Game:
             highlight.fill(YELLOW)
             self.screen.blit(highlight, (x+1, y+1))
 
-        x = X_OFFSET
         y = BOARDHEIGHT + Y_OFFSET + TILESIZE / 2
         length = 2 * TILESIZE + TILESIZE / 2
         width = TILESIZE
@@ -253,9 +274,9 @@ class Game:
         Used for debugging at the moment.
         :return:
         """
-        text = self.font.render(str(self.data.winner), True, BLACK)
+        text = self.font.render('Winner: ' + str(self.data.winner), True, BLACK)
         text_rect = text.get_rect()
-        text_rect.topleft = (600, 100)
+        text_rect.topleft = (X_OFFSET, BOARDHEIGHT + Y_OFFSET + TILESIZE*(5/3))
         self.screen.blit(text, text_rect)
 
     def show_start_screen(self):

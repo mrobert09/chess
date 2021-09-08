@@ -6,7 +6,7 @@ class Piece(pg.sprite.Sprite):
     General information applicable to all pieces.
     """
 
-    def __init__(self, color, location, piece_type, data):
+    def __init__(self, color, location, piece_type, img, data):
         """
         Initialization of piece data. Some redundant info is recorded. Hope to clean up at some point.
         Difference between moves and verified moves. The base move bank is all moves that look possible on a
@@ -31,6 +31,11 @@ class Piece(pg.sprite.Sprite):
         self.verified_move_bank = []
         self.starting_cell = self.cell_location
         self.has_moved = False
+
+        self.image = pg.image.load(path(img_folder, img))
+        self.image = pg.transform.scale(self.image, (TILESIZE, TILESIZE))
+        self.rect = self.image.get_rect()
+        self.rect.center = self.pixel_location
         self._layer = 0
 
         # debug
@@ -213,13 +218,23 @@ class Piece(pg.sprite.Sprite):
         """
         self._verified_move_bank = cell
 
+    def change_transform(self, scale):
+        """
+        Changes the size of the sprite image.
+        :param scale:
+        :return:
+        """
+        self.image = pg.transform.scale(self.image, (scale, scale))
+        self.rect = self.image.get_rect()
+
     def check_passant(self):
         """
         Checks status of passant and updates variable.
         :return:
         """
         if self.previous_cell == self.starting_cell:
-            if self.previous_cell[0] == self.cell_location[0]:
+            if self.previous_cell[0] == self.cell_location[0] \
+                    and abs(self.previous_cell[1] - self.cell_location[1]) == 2:
                 if self.color == 'White':
                     self.data.passant = (self.previous_cell[0], self.previous_cell[1] - 1)
                 else:
@@ -345,17 +360,12 @@ class King(Piece):
     King specific information.
     """
 
-    def __init__(self, color, location, piece_type, data):
-        super().__init__(color, location, piece_type, data)
+    def __init__(self, color, location, piece_type, img, data):
+        super().__init__(color, location, piece_type, img, data)
         if color == 'Black':
-            self.image = pg.image.load(path(img_folder, 'bk.svg'))
             self.data.black_king = self
         else:
-            self.image = pg.image.load(path(img_folder, 'wk.svg'))
             self.data.white_king = self
-        self.image = pg.transform.scale(self.image, (TILESIZE, TILESIZE))
-        self.rect = self.image.get_rect()
-        self.rect.center = self.pixel_location
         self.in_check = False
 
     def update_move_bank(self):
@@ -468,15 +478,8 @@ class Queen(Piece):
     Queen specific information.
     """
 
-    def __init__(self, color, location, piece_type, data):
-        super().__init__(color, location, piece_type, data)
-        if color == 'Black':
-            self.image = pg.image.load(path(img_folder, 'bq.svg'))
-        else:
-            self.image = pg.image.load(path(img_folder, 'wq.svg'))
-        self.image = pg.transform.scale(self.image, (TILESIZE, TILESIZE))
-        self.rect = self.image.get_rect()
-        self.rect.center = self.pixel_location
+    def __init__(self, color, location, piece_type, img, data):
+        super().__init__(color, location, piece_type, img, data)
 
     def update_move_bank(self):
         """
@@ -609,15 +612,8 @@ class Bishop(Piece):
     Bishop specific information.
     """
 
-    def __init__(self, color, location, piece_type, data):
-        super().__init__(color, location, piece_type, data)
-        if color == 'Black':
-            self.image = pg.image.load(path(img_folder, 'bb.svg'))
-        else:
-            self.image = pg.image.load(path(img_folder, 'wb.svg'))
-        self.image = pg.transform.scale(self.image, (TILESIZE, TILESIZE))
-        self.rect = self.image.get_rect()
-        self.rect.center = self.pixel_location
+    def __init__(self, color, location, piece_type, img, data):
+        super().__init__(color, location, piece_type, img, data)
 
     def update_move_bank(self):
         """
@@ -694,15 +690,8 @@ class Knight(Piece):
     Knight specific information.
     """
 
-    def __init__(self, color, location, piece_type, data):
-        super().__init__(color, location, piece_type, data)
-        if color == 'Black':
-            self.image = pg.image.load(path(img_folder, 'bn.svg'))
-        else:
-            self.image = pg.image.load(path(img_folder, 'wn.svg'))
-        self.image = pg.transform.scale(self.image, (TILESIZE, TILESIZE))
-        self.rect = self.image.get_rect()
-        self.rect.center = self.pixel_location
+    def __init__(self, color, location, piece_type, img, data):
+        super().__init__(color, location, piece_type, img, data)
 
         self._debug = 1
 
@@ -751,15 +740,8 @@ class Rook(Piece):
     Rook specific information.
     """
 
-    def __init__(self, color, location, piece_type, data):
-        super().__init__(color, location, piece_type, data)
-        if color == 'Black':
-            self.image = pg.image.load(path(img_folder, 'br.svg'))
-        else:
-            self.image = pg.image.load(path(img_folder, 'wr.svg'))
-        self.image = pg.transform.scale(self.image, (TILESIZE, TILESIZE))
-        self.rect = self.image.get_rect()
-        self.rect.center = self.pixel_location
+    def __init__(self, color, location, piece_type, img, data):
+        super().__init__(color, location, piece_type, img, data)
 
     def update_move_bank(self):
         """
@@ -836,15 +818,8 @@ class Pawn(Piece):
     Pawn specific information.
     """
 
-    def __init__(self, color, location, piece_type, data):
-        super().__init__(color, location, piece_type, data)
-        if color == 'Black':
-            self.image = pg.image.load(path(img_folder, 'bp.svg'))
-        else:
-            self.image = pg.image.load(path(img_folder, 'wp.svg'))
-        self.image = pg.transform.scale(self.image, (TILESIZE, TILESIZE))
-        self.rect = self.image.get_rect()
-        self.rect.center = self.pixel_location
+    def __init__(self, color, location, piece_type, img, data):
+        super().__init__(color, location, piece_type, img, data)
 
     def update_move_bank(self):
         """
