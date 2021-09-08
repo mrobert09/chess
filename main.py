@@ -1,4 +1,5 @@
 from data import *
+from ui import *
 
 
 class Game:
@@ -16,8 +17,6 @@ class Game:
         pg.display.set_caption(TITLE)
         self.font = pg.font.Font(FONT_NAME, FONT_SIZE)
         self.clock = pg.time.Clock()
-        self.b1 = None
-        self.b2 = None
         self.running = True
 
     def new(self):
@@ -27,6 +26,8 @@ class Game:
         """
         self.data = GameData(self)
         self.all_sprites = pg.sprite.LayeredUpdates()
+        self.ui = [] # list of all UI elements (like rects)
+        self.create_ui()
         self.data.populate_board()
         self.data.scan_board()
         self.data.update_move_banks()
@@ -53,12 +54,13 @@ class Game:
         :return:
         """
         for event in pg.event.get():
-            # check for clicking of mouse
 
+            # check for clicking of mouse
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
-                self.data.select_piece()
-                piece = self.data.selected_piece
-                if piece:
+                clicked_something = self.clicked_on()
+                if clicked_something == 'Piece':
+                    piece = self.data.get_piece()
+                    self.data.selected_piece = piece
                     if self.data.turn_order is True:
                         if piece.color == self.data.turn:
                             piece.set_previous_location()
@@ -66,11 +68,19 @@ class Game:
                             piece.verified_move_bank.clear()
                     elif self.data.turn_order is False:
                         piece.set_previous_location()
+                elif clicked_something == 'Rect':
+                    rect = self.data.get_rect()
+                    if rect.text == 'Turn Order On':
+                        self.data.turn_order = True
+                    elif rect.text == 'Turn Order Off':
+                        self.data.turn_order = False
+
 
             # Most game logic happens under this piece. Game state updates upon dropping piece on location.
             if event.type == pg.MOUSEBUTTONUP and event.button == 1:
-                piece = self.data.selected_piece
+                piece = self.data.get_piece()
                 if piece:
+                    self.data.selected_piece = piece
                     nearest_cell = self.data.cell_pos(piece.pixel_location)
                     if piece.move_validation(nearest_cell):
                         self.data.scan_board()
@@ -85,7 +95,7 @@ class Game:
                 else:
                     self.data.white_king.check_flag = False
 
-                self.data.clear_selected_piece()
+                self.data.selected_piece = None
                 self.data.highlighted_cells.clear()
                 self.data.clear_team_move_banks()
                 for sprite in self.all_sprites:
@@ -135,6 +145,45 @@ class Game:
         # always do last after drawing everything
         pg.display.flip()
 
+    def clicked_on(self):
+        """
+        Determines if the mouse clicked on any element (sprite, rect, etc) on the screen.
+        :return: Type of element clicked on, False if nothing
+        """
+        pos = pg.mouse.get_pos()
+        clicked_sprites = [sprite for sprite in self.all_sprites if sprite.rect.collidepoint(pos)]
+        clicked_rects = [element for element in self.ui if element.box.collidepoint(pos)]
+        if clicked_sprites:
+            return 'Piece'
+        elif clicked_rects:
+            return 'Rect'
+        else:
+            return False
+
+    def create_ui(self):
+        """
+        Creates all UI objects and adds them to self.ui list.
+        :return:
+        """
+        self.create_turn_buttons()
+
+    def create_turn_buttons(self):
+        """
+        Creates turn order buttons for debugging.
+        :return:
+        """
+        x = X_OFFSET
+        y = BOARDHEIGHT + Y_OFFSET + TILESIZE / 2
+        x2 = x + 3 * TILESIZE
+        length = 2 * TILESIZE + TILESIZE / 2
+        width = TILESIZE
+
+        order_on = TextBox('Turn Order On', (x, y), (length, width), self)
+        self.ui.append(order_on)
+
+        order_off = TextBox('Turn Order Off', (x2, y), (length, width), self)
+        self.ui.append(order_off)
+
     def draw_board(self):
         """
         Holds all the board related draws.
@@ -149,7 +198,8 @@ class Game:
         Holds all the UI related draws.
         :return:
         """
-        self.draw_turn_buttons()
+        for ui_element in self.ui:
+            ui_element.draw()
         self.draw_text()
 
     def draw_grid(self):
@@ -172,63 +222,41 @@ class Game:
 
     def draw_highlights(self):
         """
-        Draws a highlight around the currently selected cell.
+        Highlights cells when moving and also highlights turn order button.
         :return:
         """
         for cell in self.data.highlighted_cells:
-            screen = self.screen
             g_pos = self.data.global_pos(cell)
             offset = TILESIZE / 2
             x, y = g_pos
             x -= offset
             y -= offset
-            g_pos = (x, y)
-            pg.draw.line(screen, YELLOW, g_pos, (g_pos[0] + TILESIZE, g_pos[1]), 3)
-            pg.draw.line(screen, YELLOW, g_pos, (g_pos[0], g_pos[1] + TILESIZE), 3)
-            pg.draw.line(screen, YELLOW, (g_pos[0], g_pos[1] + TILESIZE), (g_pos[0] + TILESIZE, g_pos[1] + TILESIZE), 3)
-            pg.draw.line(screen, YELLOW, (g_pos[0] + TILESIZE, g_pos[1]), (g_pos[0] + TILESIZE, g_pos[1] + TILESIZE), 3)
+            highlight = pg.Surface((TILESIZE-1, TILESIZE-1))
+            highlight.set_alpha(128)
+            highlight.fill(YELLOW)
+            self.screen.blit(highlight, (x+1, y+1))
 
-    def draw_turn_buttons(self):
-        """
-        Draws buttons to interact with on the UI.
-        :return:
-        """
         x = X_OFFSET
         y = BOARDHEIGHT + Y_OFFSET + TILESIZE / 2
-        x2 = x + 3*TILESIZE
-        self.b1 = pg.Rect(x, y, 2 * TILESIZE + TILESIZE/2, TILESIZE)
-        self.b2 = pg.Rect(x2, y, 2 * TILESIZE + TILESIZE/2, TILESIZE)
-        pg.draw.rect(self.screen, BLACK, self.b1, 2)
-        pg.draw.rect(self.screen, BLACK, self.b2, 2)
+        length = 2 * TILESIZE + TILESIZE / 2
+        width = TILESIZE
+        turn_order_highlight = pg.Surface((length, width))
+        turn_order_highlight.set_alpha(128)
+        turn_order_highlight.fill(GREEN)
+        x_pos = X_OFFSET
+        if self.data.turn_order == False:
+            x_pos += (3 * TILESIZE)
+        self.screen.blit(turn_order_highlight, (x_pos, y))
 
     def draw_text(self):
         """
         Used for debugging at the moment.
         :return:
         """
-        # piece = self.data.get_piece()
-        # mouse_pos = pg.mouse.get_pos()
-        # cell = self.data.cell_pos(mouse_pos)
-        # if cell:
-        #     if cell in self.data.get_white_bank():
-        #         x = 'Attacked'
-        #     else:
-        #         x = 'Safe'
-        #     text = self.font.render(x, True, BLACK)
         text = self.font.render(str(self.data.winner), True, BLACK)
-        # text = self.font.render(str(self.data.get_piece_from_coord((1, 0)).verified_move_bank), True, BLACK)
         text_rect = text.get_rect()
         text_rect.topleft = (600, 100)
         self.screen.blit(text, text_rect)
-
-        b1_text = self.font.render('Turn Order On', True, BLACK)
-        b2_text = self.font.render('Turn Order Off', True, BLACK)
-        b1_text_rect = b1_text.get_rect()
-        b2_text_rect = b2_text.get_rect()
-        b1_text_rect.center = self.b1.center
-        b2_text_rect.center = self.b2.center
-        self.screen.blit(b1_text, b1_text_rect)
-        self.screen.blit(b2_text, b2_text_rect)
 
     def show_start_screen(self):
         """

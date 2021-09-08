@@ -355,20 +355,6 @@ class GameData:
         """
         self._verified_white_moves = cell
 
-    def select_piece(self):
-        """
-        Selects and deselects cells when clicking. Records which piece is in cell selected.
-        :return:
-        """
-        self.selected_piece = self.get_piece()
-
-    def clear_selected_piece(self):
-        """
-        Sets selected cell to be None.
-        :return:
-        """
-        self.selected_piece = None
-
     def get_piece(self):
         """
         Returns piece located at mouse pos.
@@ -379,12 +365,19 @@ class GameData:
         if clicked_sprites:
             return clicked_sprites[0]
         else:
-            if self.game.b1.collidepoint(pos):
-                self.turn_order = True
-            elif self.game.b2.collidepoint(pos):
-                self.turn_order = False
-            else:
-                return None
+            return None
+
+    def get_rect(self):
+        """
+        Returns the rect located at mouse pos.
+        :return:
+        """
+        pos = pg.mouse.get_pos()
+        clicked_rect = [r for r in self.game.ui if r.box.collidepoint(pos)]
+        if clicked_rect:
+            return clicked_rect[0]
+        else:
+            return None
 
     def get_piece_from_coord(self, coord):
         """
